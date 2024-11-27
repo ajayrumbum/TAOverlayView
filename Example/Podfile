@@ -12,8 +12,8 @@ end
 target 'TAOverlayView_Tests' do
   pod 'TAOverlayView', :path => '../'
   
-  pod 'Quick', '~> 0.10.0'
-  pod 'Nimble', '~> 5.0.0'
-  pod 'FBSnapshotTestCase', '~> 2.1.4'
-  pod 'Nimble-Snapshots', '~> 4.3.0'
+  pod 'Quick'
+  pod 'Nimble'
+  pod 'FBSnapshotTestCase'
+  pod 'Nimble-Snapshots'
 end

@@ -1,36 +1,65 @@
-import Foundation
-
-#if _runtime(_ObjC)
-
-// A Nimble matcher that catches attempts to use beAKindOf with non Objective-C types
-public func beAKindOf(_ expectedClass: Any) -> NonNilMatcherFunc<Any> {
-    return NonNilMatcherFunc {actualExpression, failureMessage in
-        failureMessage.stringValue = "beAKindOf only works on Objective-C types since"
-            + " the Swift compiler will automatically type check Swift-only types."
-            + " This expectation is redundant."
-        return false
-    }
+private func matcherMessage<T>(forType expectedType: T.Type) -> String {
+    return "be a kind of \(String(describing: expectedType))"
+}
+private func matcherMessage(forClass expectedClass: AnyClass) -> String {
+    return "be a kind of \(String(describing: expectedClass))"
 }
 
 /// A Nimble matcher that succeeds when the actual value is an instance of the given class.
-/// @see beAnInstanceOf if you want to match against the exact class
-public func beAKindOf(_ expectedClass: AnyClass) -> NonNilMatcherFunc<NSObject> {
-    return NonNilMatcherFunc { actualExpression, failureMessage in
+public func beAKindOf<T, U>(_ expectedType: T.Type) -> Matcher<U> {
+    return Matcher.define { actualExpression in
+        let message: ExpectationMessage
+
         let instance = try actualExpression.evaluate()
-        if let validInstance = instance {
-            failureMessage.actualValue = "<\(String(describing: type(of: validInstance))) instance>"
-        } else {
-            failureMessage.actualValue = "<nil>"
+        guard let validInstance = instance else {
+            message = .expectedCustomValueTo(matcherMessage(forType: expectedType), actual: "<nil>")
+            return MatcherResult(status: .fail, message: message)
         }
-        failureMessage.postfixMessage = "be a kind of \(String(describing: expectedClass))"
-        return instance != nil && instance!.isKind(of: expectedClass)
+        message = .expectedCustomValueTo(
+            "be a kind of \(String(describing: expectedType))",
+            actual: "<\(String(describing: type(of: validInstance))) instance>"
+        )
+
+        return MatcherResult(
+            bool: validInstance is T,
+            message: message
+        )
     }
 }
 
-extension NMBObjCMatcher {
-    public class func beAKindOfMatcher(_ expected: AnyClass) -> NMBMatcher {
-        return NMBObjCMatcher(canMatchNil: false) { actualExpression, failureMessage in
-            return try! beAKindOf(expected).matches(actualExpression, failureMessage: failureMessage)
+#if canImport(Darwin)
+import class Foundation.NSObject
+
+/// A Nimble matcher that succeeds when the actual value is an instance of the given class.
+/// @see beAnInstanceOf if you want to match against the exact class
+public func beAKindOf(_ expectedClass: AnyClass) -> Matcher<NSObject> {
+    return Matcher.define { actualExpression in
+        let message: ExpectationMessage
+        let status: MatcherStatus
+
+        let instance = try actualExpression.evaluate()
+        if let validInstance = instance {
+            status = MatcherStatus(bool: instance != nil && instance!.isKind(of: expectedClass))
+            message = .expectedCustomValueTo(
+                matcherMessage(forClass: expectedClass),
+                actual: "<\(String(describing: type(of: validInstance))) instance>"
+            )
+        } else {
+            status = .fail
+            message = .expectedCustomValueTo(
+                matcherMessage(forClass: expectedClass),
+                actual: "<nil>"
+            )
+        }
+
+        return MatcherResult(status: status, message: message)
+    }
+}
+
+extension NMBMatcher {
+    @objc public class func beAKindOfMatcher(_ expected: AnyClass) -> NMBMatcher {
+        return NMBMatcher { actualExpression in
+            return try beAKindOf(expected).satisfies(actualExpression).toObjectiveC()
         }
     }
 }

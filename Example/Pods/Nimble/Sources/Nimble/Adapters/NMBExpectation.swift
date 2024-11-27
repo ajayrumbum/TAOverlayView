@@ -1,131 +1,183 @@
-import Foundation
+#if !os(WASI)
 
-#if _runtime(_ObjC)
+#if canImport(Darwin)
+import class Foundation.NSObject
+import typealias Foundation.TimeInterval
 
-internal struct ObjCMatcherWrapper : Matcher {
-    let matcher: NMBMatcher
-
-    func matches(_ actualExpression: Expression<NSObject>, failureMessage: FailureMessage) -> Bool {
-        return matcher.matches(
-            ({ try! actualExpression.evaluate() }),
-            failureMessage: failureMessage,
-            location: actualExpression.location)
-    }
-
-    func doesNotMatch(_ actualExpression: Expression<NSObject>, failureMessage: FailureMessage) -> Bool {
-        return matcher.doesNotMatch(
-            ({ try! actualExpression.evaluate() }),
-            failureMessage: failureMessage,
-            location: actualExpression.location)
+private func from(objcMatcher: NMBMatcher) -> Matcher<NSObject> {
+    return Matcher { actualExpression in
+        let result = objcMatcher.satisfies(({ try actualExpression.evaluate() }),
+                                             location: actualExpression.location)
+        return result.toSwift()
     }
 }
 
 // Equivalent to Expectation, but for Nimble's Objective-C interface
-public class NMBExpectation : NSObject {
-    internal let _actualBlock: () -> NSObject!
+public class NMBExpectation: NSObject {
+    internal let _actualBlock: () -> NSObject?
     internal var _negative: Bool
     internal let _file: FileString
     internal let _line: UInt
-    internal var _timeout: TimeInterval = 1.0
+    internal var _timeout: NimbleTimeInterval = .seconds(1)
 
-    public init(actualBlock: @escaping () -> NSObject!, negative: Bool, file: FileString, line: UInt) {
+    @objc public init(actualBlock: @escaping () -> NSObject?, negative: Bool, file: FileString, line: UInt) {
         self._actualBlock = actualBlock
         self._negative = negative
         self._file = file
         self._line = line
     }
 
-    private var expectValue: Expectation<NSObject> {
-        return expect(_file, line: _line){
-            self._actualBlock() as NSObject?
+    private var expectValue: SyncExpectation<NSObject> {
+        return expect(file: _file, line: _line, self._actualBlock() as NSObject?)
+    }
+
+    @objc public var withTimeout: (TimeInterval) -> NMBExpectation {
+        return { timeout in self._timeout = timeout.nimbleInterval
+            return self
         }
     }
 
-    public var withTimeout: (TimeInterval) -> NMBExpectation {
-        return ({ timeout in self._timeout = timeout
+    @objc public var to: (NMBMatcher) -> NMBExpectation {
+        return { matcher in
+            self.expectValue.to(from(objcMatcher: matcher))
             return self
-        })
+        }
     }
 
-    public var to: (NMBMatcher) -> Void {
-        return ({ matcher in
-            self.expectValue.to(ObjCMatcherWrapper(matcher: matcher))
-        })
+    @objc public var toWithDescription: (NMBMatcher, String) -> NMBExpectation {
+        return { matcher, description in
+            self.expectValue.to(from(objcMatcher: matcher), description: description)
+            return self
+        }
     }
 
-    public var toWithDescription: (NMBMatcher, String) -> Void {
-        return ({ matcher, description in
-            self.expectValue.to(ObjCMatcherWrapper(matcher: matcher), description: description)
-        })
+    @objc public var toNot: (NMBMatcher) -> NMBExpectation {
+        return { matcher in
+            self.expectValue.toNot(from(objcMatcher: matcher))
+            return self
+        }
     }
 
-    public var toNot: (NMBMatcher) -> Void {
-        return ({ matcher in
-            self.expectValue.toNot(
-                ObjCMatcherWrapper(matcher: matcher)
-            )
-        })
+    @objc public var toNotWithDescription: (NMBMatcher, String) -> NMBExpectation {
+        return { matcher, description in
+            self.expectValue.toNot(from(objcMatcher: matcher), description: description)
+            return self
+        }
     }
 
-    public var toNotWithDescription: (NMBMatcher, String) -> Void {
-        return ({ matcher, description in
-            self.expectValue.toNot(
-                ObjCMatcherWrapper(matcher: matcher), description: description
-            )
-        })
-    }
+    @objc public var notTo: (NMBMatcher) -> NMBExpectation { return toNot }
 
-    public var notTo: (NMBMatcher) -> Void { return toNot }
+    @objc public var notToWithDescription: (NMBMatcher, String) -> NMBExpectation { return toNotWithDescription }
 
-    public var notToWithDescription: (NMBMatcher, String) -> Void { return toNotWithDescription }
-
-    public var toEventually: (NMBMatcher) -> Void {
-        return ({ matcher in
+    @objc public var toEventually: (NMBMatcher) -> Void {
+        return { matcher in
             self.expectValue.toEventually(
-                ObjCMatcherWrapper(matcher: matcher),
+                from(objcMatcher: matcher),
                 timeout: self._timeout,
                 description: nil
             )
-        })
+        }
     }
 
-    public var toEventuallyWithDescription: (NMBMatcher, String) -> Void {
-        return ({ matcher, description in
+    @objc public var toEventuallyWithDescription: (NMBMatcher, String) -> Void {
+        return { matcher, description in
             self.expectValue.toEventually(
-                ObjCMatcherWrapper(matcher: matcher),
+                from(objcMatcher: matcher),
                 timeout: self._timeout,
                 description: description
             )
-        })
+        }
     }
 
-    public var toEventuallyNot: (NMBMatcher) -> Void {
-        return ({ matcher in
+    @objc public var toEventuallyNot: (NMBMatcher) -> Void {
+        return { matcher in
             self.expectValue.toEventuallyNot(
-                ObjCMatcherWrapper(matcher: matcher),
+                from(objcMatcher: matcher),
                 timeout: self._timeout,
                 description: nil
             )
-        })
+        }
     }
 
-    public var toEventuallyNotWithDescription: (NMBMatcher, String) -> Void {
-        return ({ matcher, description in
+    @objc public var toEventuallyNotWithDescription: (NMBMatcher, String) -> Void {
+        return { matcher, description in
             self.expectValue.toEventuallyNot(
-                ObjCMatcherWrapper(matcher: matcher),
+                from(objcMatcher: matcher),
                 timeout: self._timeout,
                 description: description
             )
-        })
+        }
     }
 
-    public var toNotEventually: (NMBMatcher) -> Void { return toEventuallyNot }
+    @objc public var toNotEventually: (NMBMatcher) -> Void {
+        return toEventuallyNot
+    }
 
-    public var toNotEventuallyWithDescription: (NMBMatcher, String) -> Void { return toEventuallyNotWithDescription }
+    @objc public var toNotEventuallyWithDescription: (NMBMatcher, String) -> Void {
+        return toEventuallyNotWithDescription
+    }
 
-    public class func failWithMessage(_ message: String, file: FileString, line: UInt) {
-        fail(message, location: SourceLocation(file: file, line: line))
+    @objc public var toNever: (NMBMatcher) -> Void {
+        return { matcher in
+            self.expectValue.toNever(
+                from(objcMatcher: matcher),
+                until: self._timeout,
+                description: nil
+            )
+        }
+    }
+
+    @objc public var toNeverWithDescription: (NMBMatcher, String) -> Void {
+        return { matcher, description in
+            self.expectValue.toNever(
+                from(objcMatcher: matcher),
+                until: self._timeout,
+                description: description
+            )
+        }
+    }
+
+    @objc public var neverTo: (NMBMatcher) -> Void {
+        return toNever
+    }
+
+    @objc public var neverToWithDescription: (NMBMatcher, String) -> Void {
+        return toNeverWithDescription
+    }
+
+    @objc public var toAlways: (NMBMatcher) -> Void {
+        return { matcher in
+            self.expectValue.toAlways(
+                from(objcMatcher: matcher),
+                until: self._timeout,
+                description: nil
+            )
+        }
+    }
+
+    @objc public var toAlwaysWithDescription: (NMBMatcher, String) -> Void {
+        return { matcher, description in
+            self.expectValue.toAlways(
+                from(objcMatcher: matcher),
+                until: self._timeout,
+                description: description
+            )
+        }
+    }
+
+    @objc public var alwaysTo: (NMBMatcher) -> Void {
+        return toAlways
+    }
+
+    @objc public var alwaysToWithDescription: (NMBMatcher, String) -> Void {
+        return toAlwaysWithDescription
+    }
+
+    @objc public class func failWithMessage(_ message: String, file: FileString, line: UInt) {
+        fail(message, location: SourceLocation(fileID: "Unknown/\(file)", filePath: file, line: line, column: 0))
     }
 }
 
 #endif
+
+#endif // #if !os(WASI)

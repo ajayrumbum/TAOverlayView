@@ -1,37 +1,70 @@
 PODS:
+  - CwlCatchException (2.2.1):
+    - CwlCatchExceptionSupport (~> 2.2.1)
+  - CwlCatchExceptionSupport (2.2.1)
+  - CwlMachBadInstructionHandler (2.2.2)
+  - CwlPosixPreconditionTesting (2.2.2)
+  - CwlPreconditionTesting (2.2.2):
+    - CwlCatchException (~> 2.2.1)
+    - CwlMachBadInstructionHandler (~> 2.2.2)
+    - CwlPosixPreconditionTesting (~> 2.2.2)
   - FBSnapshotTestCase (2.1.4):
     - FBSnapshotTestCase/SwiftSupport (= 2.1.4)
   - FBSnapshotTestCase/Core (2.1.4)
   - FBSnapshotTestCase/SwiftSupport (2.1.4):
     - FBSnapshotTestCase/Core
-  - Nimble (5.0.0)
-  - Nimble-Snapshots (4.3.0):
-    - Nimble-Snapshots/Core (= 4.3.0)
-  - Nimble-Snapshots/Core (4.3.0):
-    - FBSnapshotTestCase (~> 2.0)
-    - Nimble
-    - Quick
-  - Quick (0.10.0)
+  - iOSSnapshotTestCase (8.0.0):
+    - iOSSnapshotTestCase/SwiftSupport (= 8.0.0)
+  - iOSSnapshotTestCase/Core (8.0.0)
+  - iOSSnapshotTestCase/SwiftSupport (8.0.0):
+    - iOSSnapshotTestCase/Core
+  - Nimble (13.6.2):
+    - CwlPreconditionTesting (~> 2.2.0)
+  - Nimble-Snapshots (9.8.0):
+    - Nimble-Snapshots/Core (= 9.8.0)
+  - Nimble-Snapshots/Core (9.8.0):
+    - iOSSnapshotTestCase (~> 8.0)
+    - Nimble (~> 13.0)
+  - Quick (7.6.2)
   - TAOverlayView (3.0.0)
 
 DEPENDENCIES:
-  - FBSnapshotTestCase (~> 2.1.4)
-  - Nimble (~> 5.0.0)
-  - Nimble-Snapshots (~> 4.3.0)
-  - Quick (~> 0.10.0)
+  - FBSnapshotTestCase
+  - Nimble
+  - Nimble-Snapshots
+  - Quick
   - TAOverlayView (from `../`)
+
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - CwlCatchException
+    - CwlCatchExceptionSupport
+    - CwlMachBadInstructionHandler
+    - CwlPosixPreconditionTesting
+    - CwlPreconditionTesting
+    - FBSnapshotTestCase
+    - iOSSnapshotTestCase
+    - Nimble
+    - Nimble-Snapshots
+    - Quick
 
 EXTERNAL SOURCES:
   TAOverlayView:
     :path: "../"
 
 SPEC CHECKSUMS:
+  CwlCatchException: 7acc161b299a6de7f0a46a6ed741eae2c8b4d75a
+  CwlCatchExceptionSupport: 54ccab8d8c78907b57f99717fb19d4cc3bce02dc
+  CwlMachBadInstructionHandler: dae4fdd124d45c9910ac240287cc7b898f4502a1
+  CwlPosixPreconditionTesting: ecd095aa2129e740b44301c34571e8d85906fb88
+  CwlPreconditionTesting: 67a0047dd4de4382b93442c0e3f25207f984f35a
   FBSnapshotTestCase: 094f9f314decbabe373b87cc339bea235a63e07a
-  Nimble: 56fc9f5020effa2206de22c3dd910f4fb011b92f
-  Nimble-Snapshots: 4ba722c35b73a680cbd856e4bc22076dfb8085d4
-  Quick: 5d290df1c69d5ee2f0729956dcf0fd9a30447eaa
+  iOSSnapshotTestCase: a670511f9ee3829c2b9c23e6e68f315fd7b6790f
+  Nimble: 8cd9e713948ea6a61980e82d2bec937acec16b91
+  Nimble-Snapshots: 240ea76ee8e52dfc1387b8d0d9bf1db3420cabbd
+  Quick: b8bec97cd4b9f21da0472d45580f763b801fc353
   TAOverlayView: 5621193c64e641f19f4cf575c6dc1151837ed335
 
-PODFILE CHECKSUM: 38c0473f6554f7ec42f96f8698b6be8c9400328b
+PODFILE CHECKSUM: 86945417b3145871554ea66921a3c60245c367a8
 
-COCOAPODS: 1.1.1
+COCOAPODS: 1.15.2

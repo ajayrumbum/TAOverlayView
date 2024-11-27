@@ -5,7 +5,7 @@ import Nimble
 import TAOverlayView
 
 class TableOfContentsSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("these will fail") {
 
             it("can do maths") {
